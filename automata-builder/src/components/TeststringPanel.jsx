@@ -1,4 +1,3 @@
-// components/TestStringPanel.jsx
 import React, { useState, useContext } from "react";
 import { AutomatonContext } from "../context/AutomatonContext";
 

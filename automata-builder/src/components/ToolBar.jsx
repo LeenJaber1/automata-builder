@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { AutomatonContext } from "../context/AutomatonContext";
 
 export function Toolbar() {
@@ -9,9 +9,21 @@ export function Toolbar() {
     setAutomatonType,
     saveAutomaton,
     exportImage,
-    alphabet,
     setAlphabet
   } = useContext(AutomatonContext);
+
+  const [alphabetInput, setAlphabetInput] = useState("");
+
+  const handleAlphabetChange = (e) => {
+    const value = e.target.value;
+    setAlphabetInput(value);
+    setAlphabet(
+      value
+        .split(",")
+        .map(s => s.trim())
+        .filter(Boolean)
+    );
+  };
 
   return (
     <div className="toolbar" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -28,16 +40,9 @@ export function Toolbar() {
         Alphabet:
         <input
           type="text"
-          placeholder="e.g. a,b"
-          value={alphabet.join(",")}
-          onChange={e => {
-            setAlphabet(
-              e.target.value
-                .split(",")
-                .map(s => s.trim())
-                .filter(Boolean)
-            );
-          }}
+          placeholder="e.g. a,b,c"
+          value={alphabetInput}
+          onChange={handleAlphabetChange}
           style={{
             width: 100,
             marginLeft: 4,

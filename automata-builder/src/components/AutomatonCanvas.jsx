@@ -78,19 +78,13 @@ export function AutomatonCanvas() {
       );
     }
   };
-
   const validate = () => {
     const validStates = Array.isArray(states) ? states : [];
     const validTransitions = Array.isArray(transitions) ? transitions : [];
     const validAlphabet = Array.isArray(alphabet) ? alphabet : [];
 
-    // Attach incoming/outgoing for each state (dynamically for validation)
-    validStates.forEach(state => {
-      state.outgoing = validTransitions.filter(t => t.from.id === state.id);
-      state.incoming = validTransitions.filter(t => t.to.id === state.id);
-    });
-
     const dfaErrors = [];
+
     if (automatonType === "DFA") {
       // 1. Epsilon transitions not allowed
       validTransitions.forEach((t) => {
@@ -108,22 +102,19 @@ export function AutomatonCanvas() {
           (typeof state.name === "string" && state.name.trim() !== "")
             ? state.name
             : state.id || `q${idx}`;
-        // Only consider OUTGOING transitions!
-        const outgoingBySymbol = {};
-        validTransitions.forEach((t) => {
-          if (t.from.id === state.id && t.label !== "ε") {
-            if (!outgoingBySymbol[t.label]) outgoingBySymbol[t.label] = [];
-            outgoingBySymbol[t.label].push(t);
-          }
-        });
+
+        // Only consider OUTGOING transitions for this state (no mutation)
+        const outgoing = validTransitions.filter(
+          (t) => t.from.id === state.id && t.label !== "ε"
+        );
 
         validAlphabet.forEach((symbol) => {
-          const trans = outgoingBySymbol[symbol] || [];
-          if (trans.length === 0) {
+          const matches = outgoing.filter((t) => t.label === symbol);
+          if (matches.length === 0) {
             dfaErrors.push(
               `DFA state '${stateLabel}' is missing a transition for symbol '${symbol}'.`
             );
-          } else if (trans.length > 1) {
+          } else if (matches.length > 1) {
             dfaErrors.push(
               `DFA state '${stateLabel}' has multiple transitions for symbol '${symbol}'.`
             );
@@ -132,14 +123,16 @@ export function AutomatonCanvas() {
       });
     }
 
-    // Other automaton validation logic (optional for NFA, e-NFA)
-    const errors = validateAutomaton(
+    // -- Here you can add more validation rules for NFA, etc. --
+    const generalErrors = validateAutomaton(
       automatonType,
       validStates,
       validTransitions,
       validAlphabet
     );
-    const allErrors = [...dfaErrors, ...errors];
+
+    // Show all errors
+    const allErrors = [...dfaErrors, ...generalErrors];
     if (allErrors.length > 0) {
       alert("Validation errors:\n" + allErrors.join("\n"));
     } else {
@@ -310,7 +303,6 @@ export function AutomatonCanvas() {
         ))}
       </svg>
 
-      {/* Transition label selection popover */}
       {pendingTransition && (
         <div
           style={{

@@ -1,5 +1,5 @@
 // context/AutomatonContext.jsx
-import React, { createContext, useState } from "react";
+import React, { createContext, useState, useEffect } from "react";
 import html2canvas from "html2canvas";
 
 export const AutomatonContext = createContext();
@@ -13,19 +13,25 @@ export function AutomatonContextProvider({ children }) {
   const [stepData, setStepData] = useState(null);
   const [alphabet, setAlphabet] = useState([]);
 
+  useEffect(() => {
+    setStates(states =>
+      states.map(({ outgoing, incoming, ...rest }) => ({ ...rest }))
+    );
+  }, []); 
+
   const addState = ({ x, y, name }) => {
   const id = states.length;
-  setStates([
-    ...states,
-    {
-      x,
-      y,
-      id,
-      role: "none",
-      name: typeof name === "string" && name.trim() !== "" ? name : `q${id}`
-    }
-  ]);
-};
+    setStates([
+      ...states,
+      {
+        x,
+        y,
+        id,
+        role: "none",
+        name: typeof name === "string" && name.trim() !== "" ? name : `q${id}`
+      }
+    ]);
+  };
 
 
   const simulateString = (input) => {
@@ -118,16 +124,20 @@ export function AutomatonContextProvider({ children }) {
 
   const clearHighlights = () => setHighlightedStates([]);
 
-  const saveAutomaton = () => {
-    const data = JSON.stringify({ states, transitions });
+  function stripDerivedFields(states) {
+    return states.map(({ outgoing, incoming, ...rest }) => ({ ...rest }));
+  }
+
+  function saveAutomaton() {
+    const pureStates = stripDerivedFields(states);
+    const data = JSON.stringify({ states: pureStates, transitions });
     const blob = new Blob([data], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
     a.download = "automaton.json";
     a.click();
-  };
-
+  }
   
   const exportImage = () => {
     const svg = document.querySelector("svg");
